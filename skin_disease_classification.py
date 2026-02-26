@@ -133,24 +133,18 @@ if uploaded_file:
     activation_en = cam_en(pred_idx, out_en)[0].cpu()
     activation_rn = cam_rn(pred_idx, out_rn)[0].cpu()
 
-    activation_mn = torch.nn.functional.interpolate(
-    activation_mn.unsqueeze(0),
-    size=(224,224),
-    mode='bilinear',
-    align_corners=False).squeeze().numpy()
+    def resize_cam(cam):
+      if cam.dim() == 2:
+         cam = cam.unsqueeze(0).unsqueeze(0)
+      elif cam.dim() == 3:
+         cam = cam.unsqueeze(0)
 
+      cam = torch.nn.functional.interpolate(cam, size=(224, 224), mode='bilinear', align_corners=False)
+      return cam.squeeze().cpu().numpy()
 
-    activation_en = torch.nn.functional.interpolate(
-    activation_en.unsqueeze(0),
-    size=(224,224),
-    mode='bilinear',
-    align_corners=False).squeeze().numpy()
-
-    activation_rn = torch.nn.functional.interpolate(
-    activation_rn.unsqueeze(0),
-    size=(224,224),
-    mode='bilinear',
-    align_corners=False).squeeze().numpy()
+    activation_mn = resize_cam(activation_mn)
+    activation_en = resize_cam(activation_en)
+    activation_rn = resize_cam(activation_rn)  
 
     ensemble_cam = (activation_mn + activation_en + activation_rn) / 3
 
